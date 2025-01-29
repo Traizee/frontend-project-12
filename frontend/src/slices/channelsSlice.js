@@ -1,54 +1,44 @@
-/* eslint-disable no-param-reassign */
-import { createSlice, createEntityAdapter } from '@reduxjs/toolkit';
+import { createSelector, createSlice } from "@reduxjs/toolkit";
 
-const channelsAdapter = createEntityAdapter();
 const initialState = {
-  ...channelsAdapter.getInitialState(),
-  currentChannelId: null,
-  myChannelId: null,
+	channels: [],
+	currentChannelId: null,
 };
 
 const channelsSlice = createSlice({
-  name: 'channels',
-  initialState,
-  reducers: {
-    setChannels: channelsAdapter.setAll,
-    addChannel(state, action) {
-      channelsAdapter.addOne(state, action);
-      const channel = action.payload;
-      if (channel.id === state.myChannelId) {
-        state.currentChannelId = channel.id;
-      }
-    },
-    removeChannel(state, action) {
-      channelsAdapter.removeOne(state, action);
-      const id = action.payload;
-      if (state.currentChannelId === id) {
-        state.currentChannelId = null;
-      }
-    },
-    renameChannel: channelsAdapter.updateOne,
-    setCurrentChannelId(state, action) {
-      const currentChannelId = action.payload;
-      state.currentChannelId = currentChannelId;
-    },
-    setMyChannelId(state, action) {
-      const myChannelId = action.payload;
-      state.myChannelId = myChannelId;
-    },
-  },
+	name: "channels",
+	initialState,
+	reducers: {
+		setChannels(state, { payload }) {
+			const { channels, currentChannelId } = payload;
+			state.channels = channels;
+			state.currentChannelId = currentChannelId;
+		},
+		setCurrentChannelId(state, { payload }) {
+			const { id } = payload;
+			state.currentChannelId = id;
+		},
+	},
 });
 
-// Слайс генерирует действия, которые экспортируются отдельно
-// Действия генерируются автоматически из имен ключей редьюсеров
-export const {
-  setChannels,
-  addChannel,
-  removeChannel,
-  renameChannel,
-  setCurrentChannelId,
-  setMyChannelId,
-} = channelsSlice.actions;
+export const selectChannelsState = (state) => state.channelsSlice;
 
-// По умолчанию экспортируется редьюсер, сгенерированный слайсом
+export const selectCurrentChannelId = createSelector(
+	selectChannelsState,
+	(state) => state.currentChannelId,
+);
+
+export const selectChannelsList = createSelector(
+	selectChannelsState,
+	(state) => state.channels,
+);
+
+export const selectCurrentChannel = createSelector(
+	selectChannelsList,
+	selectCurrentChannelId,
+	(channels, id) => channels.find((channel) => channel === id) || null,
+);
+
+export const { setChannels, setCurrentChannel } = channelsSlice.actions;
+
 export default channelsSlice.reducer;

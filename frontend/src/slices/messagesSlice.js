@@ -1,27 +1,34 @@
-/* eslint-disable no-param-reassign */
-import { createSlice, createEntityAdapter } from '@reduxjs/toolkit';
-import { removeChannel } from './channelsSlice';
+import { createSelector, createSlice } from '@reduxjs/toolkit';
+import { selectCurrentChannelId } from './channelsSlice';
 
-const messagesAdapter = createEntityAdapter();
-const initialState = messagesAdapter.getInitialState();
+const initialState = {
+	messages: [],
+};
 
 const messagesSlice = createSlice({
-  name: 'messages',
-  initialState,
-  reducers: {
-    setMessages: messagesAdapter.setAll,
-    addMessage: messagesAdapter.addOne,
-  },
-  extraReducers: (builder) => {
-    // При удалении канала нужно удалить все его сообщения
-    builder.addCase(removeChannel, (state, action) => {
-      const id = action.payload;
-      const restEntities = Object.values(state.entities).filter((e) => e.channelId !== id);
-      messagesAdapter.setAll(state, restEntities);
-    });
-  },
+	name: 'messages',
+	initialState,
+	reducers: {
+		setMessage(state, { payload }) {
+			const { message } = payload;
+			state.messages.push(message);
+		},
+	}
 });
 
-export const { setMessages, addMessage } = messagesSlice.actions;
+export const selectMessagesState = (state) => state.messagesSlice;
+
+export const selectMessagesList = createSelector(
+	selectMessagesState,
+	(state) => state.messages,
+);
+
+export const selectCurrentMessages = createSelector(
+	selectMessagesList,
+	selectCurrentChannelId,
+	(messages, id) => messages.filter((message) => message.id === id),
+);
+
+export const { setMessage } = messagesSlice.actions;
 
 export default messagesSlice.reducer;
